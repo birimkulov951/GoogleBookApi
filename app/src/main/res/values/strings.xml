@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">GoogleBookApi</string>
+    <string name="harry_potter">Harry Potter</string>
+    <string name="title">Title</string>
+    <string name="authors">authors</string>
+    <string name="page_count">Page Count</string>
+    <string name="published_date">Published Date</string>
+    <string name="no_books">No books found.</string>
+    <string name="no_internet">No internet connection.</string>
+    <string name="no_search_item">Please, write search book name!</string>
+    <string name="search_results">Search results:</string>
+</resources>

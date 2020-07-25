@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#fdfff5"
+    tools:context=".ui.MainActivity">
+
+    <SearchView
+        android:id="@+id/search_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentTop="true"
+        android:queryHint="Search... "
+        android:visibility="invisible"
+        android:iconifiedByDefault="false"/>
+
+
+    <TextView
+        android:id="@+id/empty_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:text="@string/no_internet"
+        android:gravity="center_horizontal"
+        android:textAppearance="?android:textAppearanceMedium"/>
+
+    <ImageView
+        android:id="@+id/google_icon"
+        android:layout_width="280dp"
+        android:layout_height="280dp"
+        android:layout_below="@id/search_view"
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/ic_google"
+        tools:ignore="ContentDescription" />
+
+</RelativeLayout>
