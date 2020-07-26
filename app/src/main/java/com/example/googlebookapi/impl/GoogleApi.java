@@ -7,7 +7,6 @@ import retrofit2.http.GET;
 import retrofit2.http.Headers;
 import retrofit2.http.Query;
 
-
 public interface GoogleApi {
 
     String BASE_URL = "https://www.googleapis.com/";

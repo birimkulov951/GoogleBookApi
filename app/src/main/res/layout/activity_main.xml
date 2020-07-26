@@ -16,7 +16,6 @@
         android:visibility="invisible"
         android:iconifiedByDefault="false"/>
 
-
     <TextView
         android:id="@+id/empty_text"
         android:layout_width="match_parent"
@@ -29,11 +28,10 @@
 
     <ImageView
         android:id="@+id/google_icon"
-        android:layout_width="280dp"
-        android:layout_height="280dp"
-        android:layout_below="@id/search_view"
+        android:layout_width="210dp"
+        android:layout_height="210dp"
+        android:layout_above="@id/empty_text"
         android:layout_centerHorizontal="true"
-        android:background="@drawable/ic_google"
         tools:ignore="ContentDescription" />
 
 </RelativeLayout>

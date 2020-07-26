@@ -22,7 +22,7 @@ import java.util.List;
 
 public class BookActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<Book>> {
 
-    public static final String LOG_TAG = MainActivity.class.getName();
+    public static final String LOG_TAG = BookActivity.class.getName();
 
     private RecyclerView mRecyclerView;
     private RecyclerView.LayoutManager mLayoutManager;
@@ -36,14 +36,9 @@ public class BookActivity extends AppCompatActivity implements LoaderManager.Loa
     private static String mBookRequestUrl = "https://www.googleapis.com/books/v1/volumes?q=";
     private static final int BOOK_LOADER_ID = 1;
 
-
-
-
     /** TextView that is displayed when the list is empty */
-    private TextView mSearchResultsTextView;
     private View mLoadingIndicator;
     private TextView mNoBooksTextView;
-
 
     /** Search String*/
     private String searchString;
@@ -69,7 +64,6 @@ public class BookActivity extends AppCompatActivity implements LoaderManager.Loa
         mRecyclerView.setAdapter(mAdapter);
 
         mNoBooksTextView = (TextView) findViewById(R.id.invisible_text_view);
-        mSearchResultsTextView = (TextView) findViewById(R.id.search_results);
         mLoadingIndicator = (View) findViewById(R.id.loading_spinner);
 
 
@@ -95,16 +89,13 @@ public class BookActivity extends AppCompatActivity implements LoaderManager.Loa
             }
         });
 
-
-
     }
 
     @Override
     public Loader<List<Book>> onCreateLoader(int i, Bundle bundle) {
-        String maxResults = "20";
-        //loadingIndicator.setVisibility(View.VISIBLE);
+        mLoadingIndicator.setVisibility(View.VISIBLE);
         // Create a new loader for the given URL
-        return new BookLoader(this, mBookRequestUrl + searchString +"&maxResults=" + maxResults);
+        return new BookLoader(this, mBookRequestUrl + searchString);
     }
 
     @Override
@@ -121,7 +112,6 @@ public class BookActivity extends AppCompatActivity implements LoaderManager.Loa
         if (books != null && !books.isEmpty()) {
             mAdapter.addAll(books);
             mAdapter.notifyDataSetChanged();
-            mSearchResultsTextView.setVisibility(View.VISIBLE);
             mNoBooksTextView.setVisibility(View.INVISIBLE);
         }
     }
