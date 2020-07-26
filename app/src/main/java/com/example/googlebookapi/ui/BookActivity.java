@@ -4,23 +4,33 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.app.LoaderManager;
 import android.content.Intent;
-import android.content.Loader;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
 import com.example.googlebookapi.Book;
 import com.example.googlebookapi.BookAdapter;
-import com.example.googlebookapi.BookLoader;
 import com.example.googlebookapi.R;
+import com.example.googlebookapi.impl.GoogleApi;
+import com.example.googlebookapi.model.BookVolumes;
+import com.example.googlebookapi.model.ImageLinks;
+import com.example.googlebookapi.model.Item;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class BookActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<Book>> {
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
+import static com.example.googlebookapi.impl.GoogleApi.BASE_URL;
+
+public class BookActivity extends AppCompatActivity {
 
     public static final String LOG_TAG = BookActivity.class.getName();
 
@@ -30,10 +40,6 @@ public class BookActivity extends AppCompatActivity implements LoaderManager.Loa
     /** Adapter for the list of Books */
     private BookAdapter mAdapter;
 
-    /**
-     * Sample JSON response for a Google Books API query
-     */
-    private static String mBookRequestUrl = "https://www.googleapis.com/books/v1/volumes?q=";
     private static final int BOOK_LOADER_ID = 1;
 
     /** TextView that is displayed when the list is empty */
@@ -41,7 +47,10 @@ public class BookActivity extends AppCompatActivity implements LoaderManager.Loa
     private TextView mNoBooksTextView;
 
     /** Search String*/
-    private String searchString;
+    private String mSearchString;
+
+    private ArrayList<Book> books = new ArrayList<>();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,8 +60,9 @@ public class BookActivity extends AppCompatActivity implements LoaderManager.Loa
         // Get the Intent that started this activity and extract the string
         Intent intent = getIntent();
         String message = intent.getStringExtra(MainActivity.SEARCH_MESSAGE);
-        message = message.indexOf(".") < 0 ? message : message.replaceAll("0*$", "").replaceAll("\\.$", "");
-        searchString = message;
+        message = message.contains(".") ? message : message.replaceAll("0*$", "").replaceAll("\\.$", "");
+        mSearchString = message;
+        Log.i(LOG_TAG, "SEARCH STRING: " + mSearchString);
 
         mRecyclerView = findViewById(R.id.recycler_view);
         mLayoutManager = new LinearLayoutManager(this);
@@ -66,14 +76,7 @@ public class BookActivity extends AppCompatActivity implements LoaderManager.Loa
         mNoBooksTextView = (TextView) findViewById(R.id.invisible_text_view);
         mLoadingIndicator = (View) findViewById(R.id.loading_spinner);
 
-
-        // Get a reference to the LoaderManager, in order to interact with loaders.
-        LoaderManager loaderManager = getLoaderManager();
-
-        // Initialize the loader. Pass in the int ID constant defined above and pass in null for
-        // the bundle. Pass in this activity for the LoaderCallbacks parameter (which is valid
-        // because this activity implements the LoaderCallbacks interface).
-        loaderManager.initLoader(BOOK_LOADER_ID, null, this);
+        retrofit(mSearchString);
 
         mAdapter.setOnItemClickListener(new BookAdapter.OnItemClickListener() {
             @Override
@@ -91,34 +94,131 @@ public class BookActivity extends AppCompatActivity implements LoaderManager.Loa
 
     }
 
-    @Override
-    public Loader<List<Book>> onCreateLoader(int i, Bundle bundle) {
-        mLoadingIndicator.setVisibility(View.VISIBLE);
-        // Create a new loader for the given URL
-        return new BookLoader(this, mBookRequestUrl + searchString);
-    }
+    private List<Book> retrofit(String searchString) {
 
-    @Override
-    public void onLoadFinished(Loader<List<Book>> loader, List<Book> books) {
-        // Hide loading indicator because the data has been loaded
-        mLoadingIndicator.setVisibility(View.GONE);
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
 
-        // Set empty state text to display "No books found."
-        mNoBooksTextView.setVisibility(View.VISIBLE);
-        // Clear the adapter of previous book data
-        //mAdapter.clear();
-        // If there is a valid list of {@link Book}s, then add them to the adapter's
-        // data set. This will trigger the ListView to update.
-        if (books != null && !books.isEmpty()) {
-            mAdapter.addAll(books);
-            mAdapter.notifyDataSetChanged();
-            mNoBooksTextView.setVisibility(View.INVISIBLE);
-        }
-    }
+        GoogleApi api = retrofit.create(GoogleApi.class);
 
-    @Override
-    public void onLoaderReset(Loader<List<Book>> loader) {
-        // Loader reset, so we can clear out our existing data.
-        mAdapter.clear();
+        Call<BookVolumes> call = api.create(searchString);
+
+        call.enqueue(new Callback<BookVolumes>() {
+            @Override
+            public void onResponse(Call<BookVolumes> call, Response<BookVolumes> response) {
+                Log.d("MainActivity", " Response String: " + response.toString());
+                Log.d("MainActivity", " Response Body String: " + response.body());
+
+                try {
+                    ArrayList<Item> itemList = response.body().getItems();
+
+                    for (int i = 0; i < itemList.size(); i++) {
+
+                        String title;
+                        try {
+                            title = itemList.get(i).getVolumeInfo().getTitle();
+                        } catch (Exception e) {
+                            title = "No title";
+                        }
+
+                        String authors = "";
+                        try {
+                            List<String> authorsArray = itemList.get(i).getVolumeInfo().getAuthors();
+
+                            for (int j = 0; j < authorsArray.size(); j++) {
+                                if (authorsArray.size() == 1) {
+                                    authors = authorsArray.get(j);
+                                } else {
+                                    authors = authors + ", " + authorsArray.get(j);
+                                }
+                            }
+                        } catch (Exception e) {
+                            authors = "Unknown author";
+                        }
+
+                        String pagesCountStr;
+                        try {
+                            int pagesCount = itemList.get(i).getVolumeInfo().getPageCount();
+                            pagesCountStr = "Pages: " + pagesCount;
+
+                        } catch (Exception e) {
+                            pagesCountStr = "Not specified";
+                        }
+
+                        String publishedDate;
+                        try {
+                            publishedDate = "P. Date: " + itemList.get(i).getVolumeInfo().getPublishedDate();
+                        } catch (Exception e) {
+                            publishedDate = "Not specified";
+                        }
+
+                        String averageRatingStr = "0.0";
+                        try {
+                            double averageRating = itemList.get(i).getVolumeInfo().getAverageRating();
+                            averageRatingStr = String.valueOf(averageRating);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+                        String smallThumbnail = null;
+                        try {
+                            ImageLinks imageLinks = itemList.get(i).getVolumeInfo().getImageLinks();
+                            smallThumbnail = imageLinks.getSmallThumbnail();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Log.d(LOG_TAG, "Null smallThumbnail!");
+                        }
+
+                        String infoLink = "";
+                        try {
+                            infoLink = itemList.get(i).getVolumeInfo().getInfoLink();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Log.d(LOG_TAG, "Null infoLink!");
+                        }
+
+                        Book book = new Book(title, authors.replaceFirst(", ", ""), pagesCountStr, publishedDate, averageRatingStr, smallThumbnail, infoLink);
+                        // Add the new {@link Book} to the list of books.
+                        books.add(book);
+
+                        Log.d(LOG_TAG,"Title: " + title + "\n" +
+                                "Authors: " + authors + "\n" +
+                                "PageCount: " + pagesCountStr + "\n" +
+                                "PublishedDate: " + publishedDate + "\n" +
+                                "AverageRating: " + averageRatingStr + "\n" +
+                                "SmallTumbnail: " + smallThumbnail + "\n" +
+                                "InfoLink: " + infoLink + "\n");
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.d(LOG_TAG, "Exception while parsing JSON!");
+                }
+
+                // Hide loading indicator because the data has been loaded
+                mLoadingIndicator.setVisibility(View.GONE);
+
+                // Set empty state text to display "No books found."
+                mNoBooksTextView.setVisibility(View.VISIBLE);
+                // Clear the adapter of previous book data
+                mAdapter.clear();
+                // If there is a valid list of {@link Book}s, then add them to the adapter's
+                // data set. This will trigger the ListView to update.
+                if (books != null && !books.isEmpty()) {
+                    mAdapter.addAll(books);
+                    mAdapter.notifyDataSetChanged();
+                    mNoBooksTextView.setVisibility(View.INVISIBLE);
+                }
+
+            }
+            @Override
+            public void onFailure(Call<BookVolumes> call, Throwable t) {
+                Log.d(LOG_TAG, "Retrofit Failure Exception message:" + t.getMessage());
+            }
+        });
+
+        return books;
     }
 }
