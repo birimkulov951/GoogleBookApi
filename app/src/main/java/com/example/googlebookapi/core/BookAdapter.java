@@ -1,4 +1,4 @@
-package com.example.googlebookapi;
+package com.example.googlebookapi.core;
 
 import android.net.Uri;
 import android.view.LayoutInflater;
@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.example.googlebookapi.R;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +27,6 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
         public TextView mPageCount;
         public RatingBar mAverageRating;
 
-
         public BookViewHolder(@NonNull View itemView, final OnItemClickListener listener) {
             super(itemView);
             mThumbnail = itemView.findViewById(R.id.thumbnail);
@@ -39,12 +39,14 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+
                     if (listener != null){
                         int position = getAdapterPosition();
                         if (position != RecyclerView.NO_POSITION){
                             listener.onItemClick(position);
                         }
                     }
+                    
                 }
             });
 

@@ -15,4 +15,12 @@ public interface GoogleApi {
     @GET("books/v1/volumes")
     Call<BookVolumes> create(@Query("q") String searchItem);
 
+    @Headers("Content-Type: application/json")
+    @GET("books/v1/volumes")
+    Call<BookVolumes> create(@Query("q") String searchItem,@Query("maxResults") String maxResults);
+
+    @Headers("Content-Type: application/json")
+    @GET("books/v1/volumes")
+    Call<BookVolumes> create(@Query("q") String searchItem,@Query("maxResults") String maxResults,@Query("orderBy") String orderBy);
+
 }

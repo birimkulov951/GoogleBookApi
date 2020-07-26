@@ -9,7 +9,6 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.SearchView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.googlebookapi.R;
@@ -52,16 +51,10 @@ public class MainActivity extends AppCompatActivity  {
             @Override
             public boolean onQueryTextSubmit(String query) {
 
-                if (query==null || query.equals("")){
-                    Toast.makeText(getApplicationContext(),R.string.no_search_item, Toast.LENGTH_SHORT).show();
-                } else {
-                    // Opens BookActivity
-                    Intent intent = new Intent(getApplicationContext(), BookActivity.class);
-                    String message = mSimpleSearchView.getQuery().toString().replaceAll(" ", "");
-                    intent.putExtra(SEARCH_MESSAGE, message);
-                    startActivity(intent);
-
-                }
+                Intent intent = new Intent(getApplicationContext(), BookActivity.class);
+                String message = mSimpleSearchView.getQuery().toString();
+                intent.putExtra(SEARCH_MESSAGE, message);
+                startActivity(intent);
 
                 return false;
             }
@@ -72,12 +65,5 @@ public class MainActivity extends AppCompatActivity  {
             }
         });
 
-
-
     }
-
-
-
-
-
 }

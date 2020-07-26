@@ -1,4 +1,4 @@
-package com.example.googlebookapi;
+package com.example.googlebookapi.core;
 
 public class Book {
 

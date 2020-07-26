@@ -11,8 +11,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
-import com.example.googlebookapi.Book;
-import com.example.googlebookapi.BookAdapter;
+import com.example.googlebookapi.core.Book;
+import com.example.googlebookapi.core.BookAdapter;
 import com.example.googlebookapi.R;
 import com.example.googlebookapi.impl.GoogleApi;
 import com.example.googlebookapi.model.BookVolumes;
@@ -34,48 +34,43 @@ public class BookActivity extends AppCompatActivity {
 
     public static final String LOG_TAG = BookActivity.class.getName();
 
+    /** RecyclerView */
     private RecyclerView mRecyclerView;
     private RecyclerView.LayoutManager mLayoutManager;
 
     /** Adapter for the list of Books */
     private BookAdapter mAdapter;
 
-    private static final int BOOK_LOADER_ID = 1;
-
     /** TextView that is displayed when the list is empty */
     private View mLoadingIndicator;
     private TextView mNoBooksTextView;
 
-    /** Search String*/
+    /** Search String for the SearchView */
     private String mSearchString;
 
+    /** New Book object for the adapter of recyclerView */
     private ArrayList<Book> books = new ArrayList<>();
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_book);
 
-        // Get the Intent that started this activity and extract the string
-        Intent intent = getIntent();
-        String message = intent.getStringExtra(MainActivity.SEARCH_MESSAGE);
-        message = message.contains(".") ? message : message.replaceAll("0*$", "").replaceAll("\\.$", "");
-        mSearchString = message;
-        Log.i(LOG_TAG, "SEARCH STRING: " + mSearchString);
-
         mRecyclerView = findViewById(R.id.recycler_view);
-        mLayoutManager = new LinearLayoutManager(this);
+        mNoBooksTextView = (TextView) findViewById(R.id.invisible_text_view);
+        mLoadingIndicator = (View) findViewById(R.id.loading_spinner);
 
         // Create a new adapter that takes an empty list of books as input
         mAdapter = new BookAdapter(new ArrayList<Book>());
+        mLayoutManager = new LinearLayoutManager(this);
 
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setAdapter(mAdapter);
 
-        mNoBooksTextView = (TextView) findViewById(R.id.invisible_text_view);
-        mLoadingIndicator = (View) findViewById(R.id.loading_spinner);
+        // Get the Intent that started this activity and extract the string
+        getIntentMethod();
 
+        // Retrofit parses JSON and mAdapter adds all data to the Book object.
         retrofit(mSearchString);
 
         mAdapter.setOnItemClickListener(new BookAdapter.OnItemClickListener() {
@@ -103,7 +98,7 @@ public class BookActivity extends AppCompatActivity {
 
         GoogleApi api = retrofit.create(GoogleApi.class);
 
-        Call<BookVolumes> call = api.create(searchString);
+        Call<BookVolumes> call = api.create(searchString,"20");
 
         call.enqueue(new Callback<BookVolumes>() {
             @Override
@@ -202,8 +197,10 @@ public class BookActivity extends AppCompatActivity {
 
                 // Set empty state text to display "No books found."
                 mNoBooksTextView.setVisibility(View.VISIBLE);
+
                 // Clear the adapter of previous book data
                 mAdapter.clear();
+
                 // If there is a valid list of {@link Book}s, then add them to the adapter's
                 // data set. This will trigger the ListView to update.
                 if (books != null && !books.isEmpty()) {
@@ -213,12 +210,21 @@ public class BookActivity extends AppCompatActivity {
                 }
 
             }
+
             @Override
             public void onFailure(Call<BookVolumes> call, Throwable t) {
                 Log.d(LOG_TAG, "Retrofit Failure Exception message:" + t.getMessage());
             }
+
         });
 
         return books;
+    }
+
+    private void getIntentMethod(){
+        Intent intent = getIntent();
+        mSearchString = intent.getStringExtra(MainActivity.SEARCH_MESSAGE);
+        //message = message.contains(".") ? message : message.replaceAll("0*$", "").replaceAll("\\.$", "");
+        Log.i(LOG_TAG, "SEARCH STRING: " + mSearchString);
     }
 }
